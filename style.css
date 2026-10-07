@@ -1,0 +1,99 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: #f5f6fa;
+}
+
+h1 {
+    background-color: #222;
+    color: white;
+    padding: 20px;
+    margin: 0;
+}
+
+h2 {
+    margin: 25px;
+}
+
+nav {
+    background-color: white;
+    padding: 15px 25px;
+    box-shadow: 0 2px 5px #ccc;
+}
+
+nav a {
+    margin-right: 25px;
+    text-decoration: none;
+    color: #222;
+    font-weight: bold;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+.cards {
+    display: flex;
+    gap: 20px;
+    margin: 25px;
+    flex-wrap: wrap;
+}
+
+.card {
+    background-color: white;
+    padding: 20px;
+    width: 200px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px #ccc;
+}
+
+.card h3 {
+    margin-top: 0;
+}
+
+.card p {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+table {
+    width: 90%;
+    margin: 25px;
+    border-collapse: collapse;
+    background-color: white;
+}
+
+th,
+td {
+    border: 1px solid #333;
+    padding: 12px;
+    text-align: center;
+}
+
+th {
+    background-color: #ddd;
+}
+
+form {
+    width: 400px;
+    margin: 25px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px #ccc;
+}
+
+input,
+select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    box-sizing: border-box;
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}

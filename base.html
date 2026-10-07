@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Sales Management System</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+    <h1>Sales & Stock Management System</h1>
+
+    <nav>
+
+        <a href="/">Dashboard</a>
+
+        <a href="/products">Products</a>
+
+        <a href="/add-product">Add Product</a>
+
+        <a href="/sales">Sales</a>
+
+        <a href="/reports">Reports</a>
+
+        <a href="/invoice">Invoice</a>
+
+        <a href="/logout">Logout</a>
+
+    </nav>
+
+    {% block content %}
+
+    {% endblock %}
+
+</body>
+
+</html>

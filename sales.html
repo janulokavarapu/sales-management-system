@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Sales - Sales Management System</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <h1>Sales & Stock Management System</h1>
+
+    <nav>
+        <a href="/">Dashboard</a>
+        <a href="/products">Products</a>
+        <a href="/add-product">Add Product</a>
+        <a href="/sales">Sales</a>
+        <a href="/reports">Reports</a>
+    </nav>
+
+
+    <h2>Record Sale</h2>
+
+    <form method="POST">
+
+        <label>Product:</label>
+
+        <select name="product_id" required>
+
+            <option value="">
+                Select Product
+            </option>
+
+            {% for product in products %}
+
+            <option value="{{ product.id }}">
+                {{ product.name }} - Stock: {{ product.quantity }}
+            </option>
+
+            {% endfor %}
+
+        </select>
+
+        <br><br>
+
+
+        <label>Quantity Sold:</label>
+
+        <input
+            type="number"
+            name="quantity"
+            min="1"
+            required
+        >
+
+        <br><br>
+
+
+        <button type="submit">
+            Record Sale
+        </button>
+
+    </form>
+
+
+    <h2>Sales History</h2>
+
+
+    <table border="1"
+           cellpadding="10"
+           cellspacing="0">
+
+        <tr>
+
+            <th>ID</th>
+
+            <th>Product</th>
+
+            <th>Quantity Sold</th>
+
+            <th>Total Amount</th>
+
+            <th>Profit</th>
+
+            <th>Date</th>
+
+        </tr>
+
+
+        {% for sale in sales %}
+
+        <tr>
+
+            <td>
+                {{ sale.id }}
+            </td>
+
+
+            <td>
+                {{ sale.product_name }}
+            </td>
+
+
+            <td>
+                {{ sale.quantity }}
+            </td>
+
+
+            <td>
+                ₹{{ sale.total_amount }}
+            </td>
+
+
+            <td>
+                ₹{{ sale.profit if sale.profit is not none else 0 }}
+            </td>
+
+
+            <td>
+                {{ sale.sale_date }}
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    </table>
+
+</body>
+
+</html>

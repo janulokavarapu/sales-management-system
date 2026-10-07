@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Invoice - Sales Management System</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+    <h1>Sales & Stock Management System</h1>
+
+    <nav>
+
+        <a href="/">Dashboard</a>
+        <a href="/products">Products</a>
+        <a href="/add-product">Add Product</a>
+        <a href="/sales">Sales</a>
+        <a href="/reports">Reports</a>
+        <a href="/logout">logout</a>
+
+    </nav>
+
+
+    <h2>🧾 Invoice / Bill</h2>
+
+
+    <form method="GET" action="/invoice">
+
+        <label>Select Product:</label>
+
+        <select name="product_id" required>
+
+            <option value="">
+                Select Product
+            </option>
+
+            {% for product in products %}
+
+            <option value="{{ product.id }}">
+
+                {{ product.name }}
+                - ₹{{ product.selling_price }}
+
+            </option>
+
+            {% endfor %}
+
+        </select>
+
+
+        <br><br>
+
+
+        <label>Quantity:</label>
+
+        <input
+            type="number"
+            name="quantity"
+            min="1"
+            required
+        >
+
+
+        <br><br>
+
+
+        <button type="submit">
+            Generate Invoice
+        </button>
+
+    </form>
+
+
+    {% if invoice %}
+
+    <hr>
+
+
+    <h2>🧾 SALES INVOICE</h2>
+
+    <p><strong>Date:</strong> {{ invoice.date }}</p>
+
+    <p><strong>Product:</strong> {{ invoice.product_name }}</p>
+
+    <p><strong>Quantity:</strong> {{ invoice.quantity }}</p>
+
+    <p><strong>Selling Price:</strong>
+        ₹{{ invoice.selling_price }}
+    </p>
+
+    <p><strong>Total Amount:</strong>
+        ₹{{ invoice.total_amount }}
+    </p>
+
+    <p><strong>Profit:</strong>
+        ₹{{ invoice.profit }}
+    </p>
+
+
+    <br>
+
+    <button onclick="window.print()">
+        🖨️ Print Invoice
+    </button>
+
+    {% endif %}
+
+
+</body>
+
+</html>
