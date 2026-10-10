@@ -1,55 +1,121 @@
+```html
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Sales Management System</title>
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='style.css') }}">
 
+    <style>
+        .login-container {
+            max-width: 400px;
+            margin: 60px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+        }
+
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .login-container p {
+            text-align: center;
+            color: #666;
+        }
+
+        .login-container label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .login-container input {
+            width: 100%;
+            padding: 11px;
+            margin-top: 6px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .login-container button {
+            width: 100%;
+            margin-top: 22px;
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .login-container button:hover {
+            background: #1d4ed8;
+        }
+
+        .error {
+            color: #dc2626;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .register-link {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 
 <body>
 
-    <h1>Sales & Stock Management System</h1>
+    <div class="login-container">
 
-    <h2>🔐 Admin Login</h2>
+        <h2>Welcome Back!</h2>
+        <p>Sales & Stock Management System</p>
 
-    <form method="POST">
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
 
-        <label>Username:</label>
+        <form method="POST" action="{{ url_for('login') }}">
 
-        <input
-            type="text"
-            name="username"
-            required
-        >
+            <label for="username">Username</label>
+            <input
+                type="text"
+                id="username"
+                name="username"
+                placeholder="Enter username"
+                required
+                autocomplete="username"
+            >
 
-        <br><br>
+            <label for="password">Password</label>
+            <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Enter password"
+                required
+                autocomplete="current-password"
+            >
 
-        <label>Password:</label>
+            <button type="submit">Login</button>
 
-        <input
-            type="password"
-            name="password"
-            required
-        >
+        </form>
 
-        <br><br>
+        <p class="register-link">
+            Don't have an account?
+            <a href="{{ url_for('register') }}">Create New Account</a>
+        </p>
 
-        <button type="submit">
-            Login
-        </button>
-
-    </form>
-
-    {% if error %}
-
-        <p><strong>{{ error }}</strong></p>
-
-    {% endif %}
+    </div>
 
 </body>
-
 </html>
+```
