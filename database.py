@@ -1,3 +1,4 @@
+
 import sqlite3
 
 DATABASE = "sales.db"
@@ -10,7 +11,6 @@ def get_db():
 
 
 def create_database():
-
     connection = get_db()
     cursor = connection.cursor()
 
@@ -38,29 +38,26 @@ def create_database():
         )
     """)
 
-    # Check existing columns
+    # Check existing sales columns
     columns = cursor.execute(
         "PRAGMA table_info(sales)"
     ).fetchall()
 
-    column_names = [column[1] for column in columns]
+    column_names = [column["name"] for column in columns]
 
     if "purchase_price_at_sale" not in column_names:
-
         cursor.execute("""
             ALTER TABLE sales
             ADD COLUMN purchase_price_at_sale REAL
         """)
 
     if "selling_price_at_sale" not in column_names:
-
         cursor.execute("""
             ALTER TABLE sales
             ADD COLUMN selling_price_at_sale REAL
         """)
 
     if "profit" not in column_names:
-
         cursor.execute("""
             ALTER TABLE sales
             ADD COLUMN profit REAL
