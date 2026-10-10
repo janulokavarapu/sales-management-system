@@ -1,0 +1,122 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - Sales Management System</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .register-container {
+            max-width: 400px;
+            margin: 60px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+        }
+
+        .register-container h2 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .register-container p {
+            text-align: center;
+            color: #666;
+        }
+
+        .register-container label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .register-container input {
+            width: 100%;
+            padding: 11px;
+            margin-top: 6px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .register-container button {
+            width: 100%;
+            margin-top: 22px;
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .register-container button:hover {
+            background: #1d4ed8;
+        }
+
+        .register-container .error {
+            color: #dc2626;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .register-container .login-link {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="register-container">
+
+        <h2>Create Account</h2>
+        <p>Sales & Stock Management System</p>
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('register') }}">
+
+            <label for="username">Username</label>
+            <input
+                type="text"
+                id="username"
+                name="username"
+                placeholder="Enter username"
+                required
+                autocomplete="username"
+            >
+
+            <label for="password">Password</label>
+            <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="At least 6 characters"
+                required
+                minlength="6"
+                autocomplete="new-password"
+            >
+
+            <button type="submit">Register</button>
+
+        </form>
+
+        <p class="login-link">
+            Already have an account?
+            <a href="{{ url_for('login') }}">Login here</a>
+        </p>
+
+    </div>
+
+</body>
+</html>
+```
