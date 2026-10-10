@@ -1,4 +1,3 @@
-
 import sqlite3
 
 DATABASE = "sales.db"
@@ -14,7 +13,7 @@ def create_database():
     connection = get_db()
     cursor = connection.cursor()
 
-    # Products table
+    # PRODUCTS TABLE
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,7 +26,7 @@ def create_database():
         )
     """)
 
-    # Sales table
+    # SALES TABLE
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS sales (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,12 +37,23 @@ def create_database():
         )
     """)
 
-    # Check existing sales columns
+    # USERS TABLE
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL
+        )
+    """)
+
+    # CHECK EXISTING SALES COLUMNS
     columns = cursor.execute(
         "PRAGMA table_info(sales)"
     ).fetchall()
 
-    column_names = [column["name"] for column in columns]
+    column_names = [
+        column["name"] for column in columns
+    ]
 
     if "purchase_price_at_sale" not in column_names:
         cursor.execute("""
