@@ -1,4 +1,3 @@
-```python
 from flask import Flask, render_template, request, redirect, session
 from database import create_database, get_db
 from datetime import datetime
