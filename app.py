@@ -6,6 +6,7 @@ app = Flask(__name__)
 
 app.secret_key = "sales_management_secret_key"
 
+create_database()
 
 # =========================
 # LOGIN PROTECTION
