@@ -1,12 +1,14 @@
+```python
 from flask import Flask, render_template, request, redirect, session
 from database import create_database, get_db
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-
 app.secret_key = "sales_management_secret_key"
 
 create_database()
+
 
 # =========================
 # LOGIN PROTECTION
@@ -14,7 +16,7 @@ create_database()
 @app.before_request
 def require_login():
 
-    if request.path == "/login":
+    if request.path in ["/login", "/register"]:
         return
 
     if request.path.startswith("/static/"):
@@ -25,6 +27,62 @@ def require_login():
 
 
 # =========================
+# REGISTER
+# =========================
+@app.route("/register", methods=["GET", "POST"])
+def register():
+
+    if request.method == "POST":
+
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+
+        if not username or not password:
+            return render_template(
+                "register.html",
+                error="Please enter username and password."
+            )
+
+        if len(password) < 6:
+            return render_template(
+                "register.html",
+                error="Password must contain at least 6 characters."
+            )
+
+        connection = get_db()
+
+        existing_user = connection.execute(
+            "SELECT id FROM users WHERE username = ?",
+            (username,)
+        ).fetchone()
+
+        if existing_user:
+            connection.close()
+
+            return render_template(
+                "register.html",
+                error="Username already exists. Please choose another."
+            )
+
+        password_hash = generate_password_hash(password)
+
+        connection.execute(
+            """
+            INSERT INTO users (username, password_hash)
+            VALUES (?, ?)
+            """,
+            (username, password_hash)
+        )
+
+        connection.commit()
+        connection.close()
+
+        return redirect("/login")
+
+    return render_template("register.html")
+
+
+# =========================
 # LOGIN
 # =========================
 @app.route("/login", methods=["GET", "POST"])
@@ -32,18 +90,37 @@ def login():
 
     if request.method == "POST":
 
-        username = request.form["username"]
-        password = request.form["password"]
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
 
+        # Default administrator login
         if username == "admin" and password == "admin123":
-
+            session.clear()
             session["logged_in"] = True
+            session["username"] = "admin"
+            return redirect("/")
 
+        # Registered user login
+        connection = get_db()
+
+        user = connection.execute(
+            "SELECT * FROM users WHERE username = ?",
+            (username,)
+        ).fetchone()
+
+        connection.close()
+
+        if user and check_password_hash(
+            user["password_hash"], password
+        ):
+            session.clear()
+            session["logged_in"] = True
+            session["username"] = user["username"]
             return redirect("/")
 
         return render_template(
             "login.html",
-            error="Invalid username or password"
+            error="Invalid username or password."
         )
 
     return render_template("login.html")
@@ -56,7 +133,6 @@ def login():
 def logout():
 
     session.clear()
-
     return redirect("/login")
 
 
@@ -68,23 +144,14 @@ def home():
 
     connection = get_db()
 
-    # TOTAL PRODUCTS
     total_products = connection.execute(
-        """
-        SELECT COUNT(*)
-        FROM products
-        """
+        "SELECT COUNT(*) FROM products"
     ).fetchone()[0]
 
-    # CURRENT STOCK
     total_stock = connection.execute(
-        """
-        SELECT COALESCE(SUM(quantity), 0)
-        FROM products
-        """
+        "SELECT COALESCE(SUM(quantity), 0) FROM products"
     ).fetchone()[0]
 
-    # TODAY'S SALES
     today_sales = connection.execute(
         """
         SELECT COALESCE(SUM(total_amount), 0)
@@ -93,7 +160,6 @@ def home():
         """
     ).fetchone()[0]
 
-    # PRODUCTS SOLD TODAY
     products_sold_today = connection.execute(
         """
         SELECT COALESCE(SUM(quantity), 0)
@@ -102,15 +168,10 @@ def home():
         """
     ).fetchone()[0]
 
-    # TOTAL PROFIT
     total_profit = connection.execute(
-        """
-        SELECT COALESCE(SUM(profit), 0)
-        FROM sales
-        """
+        "SELECT COALESCE(SUM(profit), 0) FROM sales"
     ).fetchone()[0]
 
-    # LOW STOCK PRODUCTS
     low_stock_products = connection.execute(
         """
         SELECT *
@@ -119,7 +180,6 @@ def home():
         """
     ).fetchall()
 
-    # DAILY SALES DATA
     daily_data_rows = connection.execute(
         """
         SELECT
@@ -134,7 +194,6 @@ def home():
     daily_data = []
 
     for row in daily_data_rows:
-
         daily_data.append({
             "sale_day": row["sale_day"],
             "sales": row["sales"]
@@ -165,36 +224,25 @@ def products():
     connection = get_db()
 
     if search:
-
-        products = connection.execute(
+        product_list = connection.execute(
             """
             SELECT *
             FROM products
-            WHERE name LIKE ?
-               OR category LIKE ?
+            WHERE name LIKE ? OR category LIKE ?
             ORDER BY id DESC
             """,
-            (
-                "%" + search + "%",
-                "%" + search + "%"
-            )
+            ("%" + search + "%", "%" + search + "%")
         ).fetchall()
-
     else:
-
-        products = connection.execute(
-            """
-            SELECT *
-            FROM products
-            ORDER BY id DESC
-            """
+        product_list = connection.execute(
+            "SELECT * FROM products ORDER BY id DESC"
         ).fetchall()
 
     connection.close()
 
     return render_template(
         "products.html",
-        products=products,
+        products=product_list,
         search=search
     )
 
@@ -219,14 +267,8 @@ def add_product():
         connection.execute(
             """
             INSERT INTO products
-            (
-                name,
-                category,
-                purchase_price,
-                selling_price,
-                quantity,
-                minimum_stock
-            )
+            (name, category, purchase_price, selling_price,
+             quantity, minimum_stock)
             VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
@@ -256,13 +298,13 @@ def edit_product(product_id):
     connection = get_db()
 
     product = connection.execute(
-        """
-        SELECT *
-        FROM products
-        WHERE id = ?
-        """,
+        "SELECT * FROM products WHERE id = ?",
         (product_id,)
     ).fetchone()
+
+    if not product:
+        connection.close()
+        return redirect("/products")
 
     if request.method == "POST":
 
@@ -276,13 +318,8 @@ def edit_product(product_id):
         connection.execute(
             """
             UPDATE products
-            SET
-                name = ?,
-                category = ?,
-                purchase_price = ?,
-                selling_price = ?,
-                quantity = ?,
-                minimum_stock = ?
+            SET name = ?, category = ?, purchase_price = ?,
+                selling_price = ?, quantity = ?, minimum_stock = ?
             WHERE id = ?
             """,
             (
@@ -312,16 +349,13 @@ def edit_product(product_id):
 # =========================
 # DELETE PRODUCT
 # =========================
-@app.route("/delete-product/<int:product_id>")
+@app.route("/delete-product/<int:product_id>", methods=["GET", "POST"])
 def delete_product(product_id):
 
     connection = get_db()
 
     connection.execute(
-        """
-        DELETE FROM products
-        WHERE id = ?
-        """,
+        "DELETE FROM products WHERE id = ?",
         (product_id,)
     )
 
@@ -342,39 +376,30 @@ def sales():
     if request.method == "POST":
 
         product_id = request.form["product_id"]
-        quantity = int(request.form["quantity"])
+
+        try:
+            quantity = int(request.form["quantity"])
+        except (ValueError, TypeError):
+            quantity = 0
 
         product = connection.execute(
-            """
-            SELECT *
-            FROM products
-            WHERE id = ?
-            """,
+            "SELECT * FROM products WHERE id = ?",
             (product_id,)
         ).fetchone()
 
-        if product and quantity > 0 and quantity <= product["quantity"]:
+        if product and 0 < quantity <= product["quantity"]:
 
             purchase_price = product["purchase_price"]
             selling_price = product["selling_price"]
-
             total_amount = selling_price * quantity
-
-            profit = (
-                selling_price - purchase_price
-            ) * quantity
+            profit = (selling_price - purchase_price) * quantity
 
             connection.execute(
                 """
                 INSERT INTO sales
                 (
-                    product_id,
-                    quantity,
-                    total_amount,
-                    sale_date,
-                    purchase_price_at_sale,
-                    selling_price_at_sale,
-                    profit
+                    product_id, quantity, total_amount, sale_date,
+                    purchase_price_at_sale, selling_price_at_sale, profit
                 )
                 VALUES (?, ?, ?, datetime('now'), ?, ?, ?)
                 """,
@@ -394,10 +419,7 @@ def sales():
                 SET quantity = quantity - ?
                 WHERE id = ?
                 """,
-                (
-                    quantity,
-                    product_id
-                )
+                (quantity, product_id)
             )
 
             connection.commit()
@@ -406,15 +428,11 @@ def sales():
 
     connection = get_db()
 
-    products = connection.execute(
-        """
-        SELECT *
-        FROM products
-        ORDER BY name
-        """
+    product_list = connection.execute(
+        "SELECT * FROM products ORDER BY name"
     ).fetchall()
 
-    sales = connection.execute(
+    sales_list = connection.execute(
         """
         SELECT
             sales.id,
@@ -426,8 +444,7 @@ def sales():
             sales.selling_price_at_sale,
             sales.profit
         FROM sales
-        JOIN products
-        ON sales.product_id = products.id
+        JOIN products ON sales.product_id = products.id
         ORDER BY sales.id DESC
         """
     ).fetchall()
@@ -436,8 +453,8 @@ def sales():
 
     return render_template(
         "sales.html",
-        products=products,
-        sales=sales
+        products=product_list,
+        sales=sales_list
     )
 
 
@@ -461,13 +478,9 @@ def reports():
                 COALESCE(SUM(profit), 0) AS profit,
                 COALESCE(SUM(quantity), 0) AS products_sold
             FROM sales
-            WHERE DATE(sale_date)
-            BETWEEN DATE(?) AND DATE(?)
+            WHERE DATE(sale_date) BETWEEN DATE(?) AND DATE(?)
             """,
-            (
-                start_date,
-                end_date
-            )
+            (start_date, end_date)
         ).fetchone()
 
         top_products = connection.execute(
@@ -476,17 +489,12 @@ def reports():
                 products.name AS product_name,
                 SUM(sales.quantity) AS total_sold
             FROM sales
-            JOIN products
-            ON sales.product_id = products.id
-            WHERE DATE(sale_date)
-            BETWEEN DATE(?) AND DATE(?)
+            JOIN products ON sales.product_id = products.id
+            WHERE DATE(sale_date) BETWEEN DATE(?) AND DATE(?)
             GROUP BY sales.product_id
             ORDER BY total_sold DESC
             """,
-            (
-                start_date,
-                end_date
-            )
+            (start_date, end_date)
         ).fetchall()
 
     else:
@@ -508,8 +516,7 @@ def reports():
                 products.name AS product_name,
                 SUM(sales.quantity) AS total_sold
             FROM sales
-            JOIN products
-            ON sales.product_id = products.id
+            JOIN products ON sales.product_id = products.id
             WHERE DATE(sale_date) = DATE('now')
             GROUP BY sales.product_id
             ORDER BY total_sold DESC
@@ -536,49 +543,35 @@ def invoice():
     connection = get_db()
 
     products = connection.execute(
-        """
-        SELECT *
-        FROM products
-        ORDER BY name
-        """
+        "SELECT * FROM products ORDER BY name"
     ).fetchall()
 
     invoice_data = None
 
     product_id = request.args.get("product_id")
-    quantity = request.args.get("quantity")
+    quantity_value = request.args.get("quantity")
 
-    if product_id and quantity:
+    if product_id and quantity_value:
 
         try:
-            quantity = int(quantity)
-        except ValueError:
+            quantity = int(quantity_value)
+        except (ValueError, TypeError):
             quantity = 0
 
         product = connection.execute(
-            """
-            SELECT *
-            FROM products
-            WHERE id = ?
-            """,
+            "SELECT * FROM products WHERE id = ?",
             (product_id,)
         ).fetchone()
 
         if product and quantity > 0:
 
-            total_amount = (
-                product["selling_price"] * quantity
-            )
-
+            total_amount = product["selling_price"] * quantity
             profit = (
-                product["selling_price"]
-                - product["purchase_price"]
+                product["selling_price"] - product["purchase_price"]
             ) * quantity
 
             invoice_data = {
-                "date": datetime.now().strftime(
-                    "%d-%m-%Y %H:%M"
-                ),
+                "date": datetime.now().strftime("%d-%m-%Y %H:%M"),
                 "product_name": product["name"],
                 "quantity": quantity,
                 "selling_price": product["selling_price"],
@@ -599,7 +592,5 @@ def invoice():
 # START APPLICATION
 # =========================
 if __name__ == "__main__":
-
-    create_database()
-
     app.run(debug=True)
+```
